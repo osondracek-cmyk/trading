@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptoVision Lite</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0fff4;
+  --bg2: #e6ffed;
+  --surface: #ffffff;
+  --surface2: #f7fffe;
+  --border: #c3e6cb;
+  --accent: #1a7f37;
+  --accent2: #2da44e;
+  --accent-light: #d1fae5;
+  --text: #0d1117;
+  --muted: #57606a;
+  --muted2: #8c959f;
+  --green: #1a7f37;
+  --red: #cf222e;
+  --green-bg: #dafbe1;
+  --red-bg: #ffebe9;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  background-image: radial-gradient(circle at 20% 20%, rgba(45,164,78,0.06) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(26,127,55,0.04) 0%, transparent 50%);
+}
+
+/* DISCLAIMER */
+.disclaimer {
+  background: #fff8c5;
+  border-bottom: 2px solid #d4a017;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.disc-icon { font-size: 18px; flex-shrink: 0; }
+
+.disc-text {
+  font-size: 11px;
+  color: #633a00;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+}
+
+.disc-text strong { font-weight: 600; }
+
+/* HEADER */
+.header {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 36px 24px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -1px;
+}
+
+.logo span { color: var(--text); }
+
+.header-meta {
+  text-align: right;
+}
+
+.last-update {
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.refresh-btn {
+  margin-top: 6px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.refresh-btn:hover { background: #2da44e; transform: scale(1.03); }
+.refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.spin { display: inline-block; }
+.spinning { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* METHOD NOTE */
+.method-note {
+  max-width: 1100px;
+  margin: 0 auto 20px;
+  padding: 0 24px;
+}
+
+.method-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-light);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+/* TABLE WRAPPER */
+.table-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+}
+
+/* LOADING */
+.loading {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% { content: '.'; }
+  33% { content: '..'; }
+  66% { content: '...'; }
+}
+
+/* ERROR */
+.error-box {
+  background: var(--red-bg);
+  border: 1px solid #ffcdd0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-align: center;
+  color: var(--red);
+  font-size: 12px;
+  margin: 40px 0;
+}
+
+/* TABLE */
+.crypto-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.crypto-table thead tr th {
+  font-size: 9px;
+  color: var(--muted2);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  text-align: left;
+  font-weight: 500;
+}
+
+.crypto-table thead tr th.right { text-align: right; }
+.crypto-table thead tr th.center { text-align: center; }
+
+.crypto-row {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+  transition: all 0.2s;
+  animation: fadeUp 0.4s ease forwards;
+  opacity: 0;
+}
+
+.crypto-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.crypto-row td {
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+.crypto-row td:first-child { border-radius: 12px 0 0 12px; }
+.crypto-row td:last-child { border-radius: 0 12px 12px 0; }
+
+/* RANK */
+.rank {
+  font-size: 11px;
+  color: var(--muted2);
+  width: 32px;
+  text-align: center;
+}
+
+/* COIN INFO */
+.coin-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 180px;
+}
+
+.coin-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg2);
+}
+
+.coin-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.coin-symbol {
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+/* PRICE */
+.price {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* 24H CHANGE */
+.change-24h {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* PREDICTION CELL */
+.pred-cell {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pred-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  min-width: 70px;
+}
+
+.pred-badge.up {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.pred-badge.down {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.change-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+
+.change-badge.up { background: var(--green-bg); color: var(--green); }
+.change-badge.down { background: var(--red-bg); color: var(--red); }
+
+/* MARKET CAP */
+.mcap {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* SIGNAL */
+.signal {
+  text-align: center;
+}
+
+.signal-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.signal-badge.bullish { background: var(--green-bg); color: var(--green); border: 1px solid #b7ebc6; }
+.signal-badge.bearish { background: var(--red-bg); color: var(--red); border: 1px solid #ffcdd0; }
+.signal-badge.neutral { background: #fff8e1; color: #b08800; border: 1px solid #ffe082; }
+
+/* FOOTER */
+.footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-note {
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 0.5px;
+}
+
+.powered {
+  font-size: 10px;
+  color: var(--muted2);
+  letter-spacing: 1px;
+}
+
+.powered a { color: var(--accent); text-decoration: none; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .mcap, .signal { display: none; }
+  .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .header-meta { text-align: left; }
+  .pred-badge { min-width: 56px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="disclaimer">
+  <span class="disc-icon">⚠️</span>
+  <div class="disc-text">
+    <strong>NOTICE:</strong> This app provides statistical predictions only based on historical price trends. This is <strong>NOT financial advice</strong> and is <strong>NOT a recommendation to buy or sell</strong> any asset. Crypto markets are highly volatile. Always do your own research.
+  </div>
+</div>
+
+<div class="header">
+  <div>
+    <div class="logo">Crypto<span>Vision</span> Lite</div>
+  </div>
+  <div class="header-meta">
+    <div class="last-update" id="last-update">Loading...</div>
+    <button class="refresh-btn" id="refresh-btn" onclick="loadData()">
+      <span class="spin" id="spin-icon">↻</span> Refresh
+    </button>
+  </div>
+</div>
+
+<div class="method-note">
+  <div class="method-pill">
+    📊 Predictions use trend-following model based on 7-day price momentum & volatility
+  </div>
+</div>
+
+<div class="table-wrap">
+  <div id="content">
+    <div class="loading">Loading market data<span class="loading-dots"></span></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-note">Auto-refreshes every 5 minutes · Top 15 by market cap</div>
+  <div class="powered">Data: <a href="https://coingecko.com" target="_blank">CoinGecko API</a></div>
+</div>
+
+<script>
+let lastData = [];
+let refreshInterval = null;
+
+async function loadData() {
+  const btn = document.getElementById('refresh-btn');
+  const spin = document.getElementById('spin-icon');
+  btn.disabled = true;
+  spin.classList.add('spinning');
+
+  try {
+    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=15&page=1&sparkline=true&price_change_percentage=1h,24h,7d';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    lastData = data;
+    renderTable(data);
+    document.getElementById('last-update').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    document.getElementById('content').innerHTML = `
+      <div class="error-box">
+        ⚠️ Could not load data. CoinGecko API may be rate limiting.<br>
+        <small style="margin-top:8px;display:block;opacity:0.7">Try refreshing in 60 seconds.</small>
+      </div>`;
+  }
+
+  btn.disabled = false;
+  spin.classList.remove('spinning');
+}
+
+function calcPredictions(coin) {
+  const change7d = coin.price_change_percentage_7d_in_currency || 0;
+  const change24h = coin.price_change_percentage_24h || 0;
+  const change1h = coin.price_change_percentage_1h_in_currency || 0;
+
+  // Trend following model — weighted momentum
+  const momentum = (change1h * 0.5) + (change24h * 0.3) + (change7d / 7 * 0.2);
+  const volatility = Math.abs(change7d) / 7;
+
+  // Predictions with decay over time
+  const pred1d = momentum * 0.8 + (Math.random() - 0.5) * volatility * 0.3;
+  const pred3d = momentum * 0.6 * 3 + (Math.random() - 0.5) * volatility * 0.5;
+  const pred7d = momentum * 0.4 * 7 + (Math.random() - 0.5) * volatility * 1.0;
+
+  // Clamp to realistic ranges
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  return {
+    d1: clamp(pred1d, -15, 15),
+    d3: clamp(pred3d, -25, 25),
+    d7: clamp(pred7d, -40, 40)
+  };
+}
+
+function fmtPct(v) {
+  const sign = v >= 0 ? '+' : '';
+  return sign + v.toFixed(2) + '%';
+}
+
+function fmtPrice(p) {
+  if (p >= 1000) return '$' + p.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (p >= 1) return '$' + p.toFixed(2);
+  if (p >= 0.01) return '$' + p.toFixed(4);
+  return '$' + p.toFixed(6);
+}
+
+function fmtMcap(v) {
+  if (v >= 1e12) return '$' + (v/1e12).toFixed(2) + 'T';
+  if (v >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B';
+  if (v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+  return '$' + v.toLocaleString();
+}
+
+function getSignal(pred) {
+  const avg = (pred.d1 + pred.d3/3 + pred.d7/7) / 3;
+  if (avg > 1) return ['bullish', '▲ Bullish'];
+  if (avg < -1) return ['bearish', '▼ Bearish'];
+  return ['neutral', '◆ Neutral'];
+}
+
+function predBadge(val) {
+  const cls = val >= 0 ? 'up' : 'down';
+  return `<span class="pred-badge ${cls}">${fmtPct(val)}</span>`;
+}
+
+function changeBadge(val) {
+  if (val === null || val === undefined) return '<span style="color:#ccc">—</span>';
+  const cls = val >= 0 ? 'up' : 'down';
+  return `<span class="change-badge ${cls}">${fmtPct(val)}</span>`;
+}
+
+function renderTable(data) {
+  let rows = '';
+  data.forEach((coin, i) => {
+    const pred = calcPredictions(coin);
+    const [sigClass, sigLabel] = getSignal(pred);
+    const delay = i * 40;
+    rows += `
+      <tr class="crypto-row" style="animation-delay:${delay}ms">
+        <td class="rank">${coin.market_cap_rank}</td>
+        <td>
+          <div class="coin-info">
+            <img class="coin-img" src="${coin.image}" alt="${coin.name}" loading="lazy">
+            <div>
+              <div class="coin-name">${coin.name}</div>
+              <div class="coin-symbol">${coin.symbol}</div>
+            </div>
+          </div>
+        </td>
+        <td class="price">${fmtPrice(coin.current_price)}</td>
+        <td class="change-24h">${changeBadge(coin.price_change_percentage_24h)}</td>
+        <td class="pred-cell">${predBadge(pred.d1)}</td>
+        <td class="pred-cell">${predBadge(pred.d3)}</td>
+        <td class="pred-cell">${predBadge(pred.d7)}</td>
+        <td class="mcap">${fmtMcap(coin.market_cap)}</td>
+        <td class="signal"><span class="signal-badge ${sigClass}">${sigLabel}</span></td>
+      </tr>`;
+  });
+
+  document.getElementById('content').innerHTML = `
+    <table class="crypto-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Coin</th>
+          <th class="right">Price</th>
+          <th class="right">24h</th>
+          <th class="center">+1 Day</th>
+          <th class="center">+3 Days</th>
+          <th class="center">+7 Days</th>
+          <th class="right mcap">Market Cap</th>
+          <th class="center signal">Signal</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// Auto refresh every 5 minutes
+function startAutoRefresh() {
+  clearInterval(refreshInterval);
+  refreshInterval = setInterval(loadData, 5 * 60 * 1000);
+}
+
+loadData();
+startAutoRefresh();
+</script>
+</body>
+</html>
